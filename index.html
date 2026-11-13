@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ποιος θα είναι ο επόμενος που θα επιστρέψει;</title>
+<style>
+@font-face{font-family:BestSans;src:url(fonts/BestSans-Bold.woff2) format("woff2");font-weight:700;font-display:swap}
+:root{--o:#FFA028;--w:#fff;--g:#969696}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#000 radial-gradient(ellipse at 50% 30%,#2a1700 0%,#0b0b0b 55%,#000 100%) fixed;color:var(--w);font-family:BestSans,Inter,system-ui,sans-serif;font-weight:700}
+body{min-height:100svh;display:flex;flex-direction:column;align-items:center;padding:18px 16px 28px;overflow-x:hidden}
+.k{color:var(--o);font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:34px 0 8px;text-align:center}
+h1{font-size:clamp(26px,7.4vw,40px);line-height:1.12;margin:0 0 18px;text-align:center;text-transform:uppercase;max-width:640px}
+h1 span{background:linear-gradient(90deg,#FFA028,#FF5A36,#FFD23F);-webkit-background-clip:text;background-clip:text;color:transparent}
+#stage{position:relative;width:min(94vw,520px,calc(100svh - 270px));min-width:290px;aspect-ratio:1;margin-top:10px}
+canvas{filter:drop-shadow(0 0 22px rgba(255,160,40,.45));width:100%;height:100%;display:block;touch-action:manipulation;cursor:pointer}
+#ptr{position:absolute;left:50%;top:-16px;width:30px;height:40px;margin-left:-15px;transform-origin:50% 8px;z-index:3;pointer-events:none}
+#hub{position:absolute;left:50%;top:50%;width:21%;aspect-ratio:1;margin:-10.5% 0 0 -10.5%;border-radius:50%;background:#000;border:3px solid var(--o);color:var(--o);font:inherit;font-size:clamp(11px,3.3vw,17px);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;z-index:2;padding:0}
+#hub:disabled{color:var(--g);border-color:var(--g);cursor:default}
+#msg{min-height:44px;margin:12px 0 0;text-align:center;font-size:17px;color:var(--o);max-width:520px}
+#sound{position:fixed;top:10px;right:12px;background:#000;border:1px solid var(--g);color:var(--w);border-radius:20px;font:inherit;font-size:12px;padding:6px 12px;z-index:5;cursor:pointer}
+#card{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:10;padding:16px;overflow:auto}
+#card.on{display:flex}
+.c{background:#000;border:2px solid var(--o);border-radius:14px;max-width:420px;width:100%;padding:20px;text-align:left;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.ph{width:128px;height:128px;border-radius:50%;border:3px solid var(--o);display:block;margin:0 auto 12px;object-fit:cover;background:#000}
+.ini{display:flex;align-items:center;justify-content:center;font-size:44px;color:var(--o)}
+.c .t{color:var(--o);font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-align:center}
+.c h2{margin:4px 0 6px;font-size:26px;text-align:center;text-transform:uppercase}
+.c .r{color:var(--g);font-size:14px;text-align:center;margin-bottom:10px}
+.c .m{color:var(--o);font-size:20px;text-align:center;margin-bottom:10px}
+.c p{margin:0 0 10px;font-size:16px;line-height:1.35}
+.c small{display:block;color:var(--g);font-size:12px;line-height:1.35;margin-bottom:14px}
+.btn{display:block;width:100%;background:var(--o);color:#000;border:0;border-radius:10px;font:inherit;font-size:17px;padding:13px;cursor:pointer;text-transform:uppercase}
+footer{max-width:560px;margin-top:22px;color:var(--g);font-size:12px;line-height:1.5;text-align:center}
+footer b{color:var(--w)}
+footer a{color:var(--o)}
+@media (prefers-reduced-motion:reduce){.c{animation:none}}
+</style></head><body>
+<button id="sound" aria-label="Ήχος">ΗΧΟΣ: ΝΑΙ</button>
+<div class="k">Παιχνίδι · 44 «γαλάζιοι» που αποπέμφθηκαν από το 2019</div>
+<h1>Ποιος θα είναι <span>ο επόμενος</span> που θα επιστρέψει;</h1>
+<div id="stage">
+  <svg id="ptr" viewBox="0 0 30 40"><path d="M15 38 L2 8 A14 14 0 0 1 28 8 Z" fill="#FFA028" stroke="#000" stroke-width="2"/><circle cx="15" cy="12" r="4" fill="#000"/></svg>
+  <canvas id="cv"></canvas>
+  <button id="hub">Γύρνα</button>
+</div>
+<div id="msg" role="status">Πάτα τον τροχό ή το κουμπί για να γυρίσει.</div>
+<div id="card"><div class="c" id="cc"></div></div>
+<footer>
+<b>Είναι παιχνίδι τύχης, όχι πρόβλεψη.</b> Ο τροχός δεν δείχνει ποιος θα επιστρέψει πραγματικά.<br>
+Η λίστα των 44 και οι λόγοι αποχώρησης προέρχονται από το δημοσίευμα του Ποντικιού (13/11/2026) και αποδίδονται σε αυτό. Η λίστα μετρά διαφορετικές «εξόδους»: παραιτήσεις, διαγραφές, αποπομπές, αποσύρσεις υποψηφιότητας. Δεν εξηγεί τα κριτήρια και δεν σημαίνει ότι όλοι αποχώρησαν για τον ίδιο λόγο.<br>
+Πηγή: <a href="https://www.topontiki.gr/2026/11/13/nea-dimokratia-oute-enas-oute-dio-oute-tesseris-alla-44-i-galazii-pou-apopemfikan-apo-to-2019-os-simera/" target="_blank" rel="noopener">topontiki.gr, 13/11/2026</a>. Επέστρεψαν: Βαρτζόπουλος, Χατζηβασιλείου (στην κυβέρνηση), Αυγενάκης, Κυριαζίδης (στην ΚΟ της ΝΔ).
+</footer>
+<script>
+// [επώνυμο, ονοματεπώνυμο, ρόλος, μήνας, έτος, λόγος (κατά το Ποντίκι), επέστρεψε, φωτό]
+const R_GOV="στην κυβέρνηση", R_KO="στην ΚΟ της ΝΔ";
+const D=[
+["Τσαβδαρίδης","Λάζαρος Τσαβδαρίδης","Υφυπουργός Ανάπτυξης","Νοέμβριος",2026,"Μοριοδότηση της κόρης του",0,"p19"],
+["Λαζαρίδης","Μακάριος Λαζαρίδης","Υφυπουργός Αγροτικής Ανάπτυξης","Απρίλιος",2026,"Αμφισβήτηση προσόντων",0,"p18"],
+["Τσιάρας","Κώστας Τσιάρας","Υπουργός Αγροτικής Ανάπτυξης","Απρίλιος",2026,"ΟΠΕΚΕΠΕ",0,"p15"],
+["Κεφαλογιάννης","Γιάννης Κεφαλογιάννης","Υπουργός Κλιματικής Κρίσης","Απρίλιος",2026,"ΟΠΕΚΕΠΕ",0,"p16"],
+["Βαρτζόπουλος","Δημήτρης Βαρτζόπουλος","Υφυπουργός Υγείας","Απρίλιος",2026,"ΟΠΕΚΕΠΕ. Η υπόθεση αρχειοθετήθηκε",R_GOV,"p17"],
+["Σκρέκας","Κώστας Σκρέκας","Γραμματέας ΝΔ","Απρίλιος",2026,"ΟΠΕΚΕΠΕ",0,"q00"],
+["Μηταράκης","Νότης Μηταράκης","Κοινοβουλευτικός εκπρόσωπος ΝΔ","Απρίλιος",2026,"ΟΠΕΚΕΠΕ. Είχε προηγηθεί (Ιούλιος 2023) η παραίτησή του από υπουργός, για τις διακοπές του στις πυρκαγιές",0,"p05"],
+["Κέλλας","Χρήστος Κέλλας","Υφυπουργός Αγροτικής Ανάπτυξης","Απρίλιος",2026,"Ανασχηματισμός",0,"q01"],
+["Καρασαρίνης","Ανδρέας Καρασαρίνης","Γραμματέας Αγροτικών Φορέων ΝΔ","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,""],
+["Τρουλλινός","Γιάννης Τρουλλινός","Μέλος Πολιτικής Επιτροπής ΝΔ","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,""],
+["Βορίδης","Μάκης Βορίδης","Υπουργός Μετανάστευσης","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,"p11"],
+["Χατζηβασιλείου","Τάσος Χατζηβασιλείου","Υφυπουργός Εξωτερικών","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",R_GOV,"p12"],
+["Σταμενίτης","Διονύσης Σταμενίτης","Υφυπουργός Αγροτικής Ανάπτυξης","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,"p13"],
+["Μπουκώρος","Χρήστος Μπουκώρος","Υφυπουργός Ψηφιακής Διακυβέρνησης","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,"p14"],
+["Στρατάκος","Γιώργος Στρατάκος","Γενικός Γραμματέας Αγροτικής Ανάπτυξης","Ιούνιος",2025,"ΟΠΕΚΕΠΕ",0,""],
+["Δοξιάδης","Αρίστος Δοξιάδης","Υφυπουργός Ανάπτυξης","Μάρτιος",2025,"Υπόθεση καρτέλ",0,"p10"],
+["Κυριαζίδης","Δημήτρης Κυριαζίδης","Βουλευτής","Μάρτιος",2025,"Διαγραφή για σχόλιο προς την Κωνσταντοπούλου",R_KO,""],
+["Τριαντόπουλος","Χρήστος Τριαντόπουλος","Υφυπουργός Κλιματικής Κρίσης","Μάρτιος",2025,"Τέμπη",0,"p09"],
+["Παπαγεωργίου","Βασίλης Παπαγεωργίου","Γενικός Γραμματέας Πολιτικής Προστασίας","Μάρτιος",2025,"Τέμπη",0,"q02"],
+["Σφυράκης","Ιωάννης Σφυράκης","Υποδιοικητής Υπηρεσίας Ασύλου","Φεβρουάριος",2025,"Καταγγελία για χρηματισμό",0,""],
+["Αυγενάκης","Λευτέρης Αυγενάκης","Βουλευτής","Ιούλιος",2024,"Διαγραφή για επεισόδιο σε αεροδρόμιο",R_KO,"q03"],
+["Κορομηλάς","Αριστόδημος Κορομηλάς","Οργανωτικός Γραμματέας ΝΔ","Ιούνιος",2024,"Υπόθεση δεδομένων αποδήμων",0,""],
+["Παπασταύρου","Σταύρος Παπασταύρου","Υπουργός Επικρατείας","Μάρτιος",2024,"Συνάντηση με τον Β. Μαρινάκη",0,"p07"],
+["Μπρατάκος","Γιάννης Μπρατάκος","Υφυπουργός παρά τω πρωθυπουργώ","Μάρτιος",2024,"Η ίδια υπόθεση με τον Παπασταύρου",0,"p08"],
+["Ταμήλος","Μιχάλης Ταμήλος","Πρώην βουλευτής","Μάρτιος",2024,"Διαγραφή για δηλώσεις για τα Τέμπη",0,""],
+["Ασημακοπούλου","Άννα-Μισέλ Ασημακοπούλου","Ευρωβουλευτής","Μάρτιος",2024,"Απόσυρση υποψηφιότητας, υπόθεση δεδομένων αποδήμων",0,"q04"],
+["Σταυριανουδάκης","Μιχάλης Σταυριανουδάκης","Γενικός Γραμματέας ΥΠΕΣ","Μάρτιος",2024,"Η ίδια υπόθεση δεδομένων αποδήμων",0,""],
+["Θεοδωρόπουλος","Νίκος Θεοδωρόπουλος","Γραμματέας Αποδήμων ΝΔ","Μάρτιος",2024,"Αποπομπή, υπόθεση δεδομένων αποδήμων",0,""],
+["Βαρβιτσιώτης","Μιλτιάδης Βαρβιτσιώτης","Υπουργός Ναυτιλίας","Σεπτέμβριος",2023,"Δηλώσεις για τον θάνατο του Αντώνη Καργιώτη",0,"p06"],
+["Πατούλης","Γιώργος Πατούλης","Περιφερειάρχης Αττικής","Ιούλιος",2023,"Ζεϊμπέκικο την ώρα των πυρκαγιών",0,"q05"],
+["Κατραντζή","Μουσταφά Κατραντζή","Υποψήφιος βουλευτής","Ιούνιος",2023,"Απόσυρση υποψηφιότητας, σχέσεις με τουρκικό προξενείο",0,""],
+["Πνευματικός","Σπύρος Πνευματικός","Υποψήφιος βουλευτής","Ιούνιος",2023,"Απόσυρση υποψηφιότητας, δηλώσεις για καρκινοπαθείς",0,""],
+["Νικολάου","Σοφία Νικολάου","Πρώην Γ.Γ. Αντεγκληματικής Πολιτικής","Μάρτιος",2023,"Αποκλεισμός από τα ψηφοδέλτια",0,""],
+["Καραμανλής","Κώστας Αχ. Καραμανλής","Υπουργός Μεταφορών","Μάρτιος",2023,"Τέμπη",0,"p04"],
+["Χειμάρας","Θέμης Χειμάρας","Βουλευτής","Ιανουάριος",2023,"Ασυμβίβαστο",0,""],
+["Σμυρλής","Γιάννης Σμυρλής","Γενικός Γραμματέας ΥΠΕΞ","Δεκέμβριος",2022,"Άδειες εξαγωγής Predator",0,""],
+["Σπυράκη","Μαρία Σπυράκη","Ευρωβουλευτής","Δεκέμβριος",2022,"Αναστολή κομματικής ιδιότητας",0,"q06"],
+["Πάτσης","Ανδρέας Πάτσης","Βουλευτής","Οκτώβριος",2022,"Διαγραφή, κόκκινα δάνεια",0,""],
+["Κοντολέων","Παναγιώτης Κοντολέων","Διοικητής ΕΥΠ","Αύγουστος",2022,"Παρακολούθηση Ανδρουλάκη",0,""],
+["Δημητριάδης","Γρηγόρης Δημητριάδης","Γενικός Γραμματέας Πρωθυπουργού","Αύγουστος",2022,"Υποκλοπές",0,"p03"],
+["Λιβανός","Σπήλιος Λιβανός","Υπουργός Αγροτικής Ανάπτυξης","Φεβρουάριος",2022,"Βίντεο για πυρόπληκτους",0,"p02"],
+["Δούκας","Πέτρος Δούκας","Δήμαρχος Σπάρτης","Φεβρουάριος",2022,"Διαγραφή",0,""],
+["Λούλης","Κώστας Λούλης","Γενικός Γραμματέας ΕΟΤ","",2020,"Μη κατοχή τίτλου σπουδών",0,""],
+["Διαματάρης","Αντώνης Διαματάρης","Υφυπουργός Εξωτερικών","Δεκέμβριος",2019,"Ψευδές μεταπτυχιακό Columbia στο βιογραφικό",0,"p01"]
+];
+const CR={q00:"Κ. Σκρέκας, CC BY-SA 4.0, Wikimedia Commons",q01:"European Union, Wikimedia Commons",q02:"Sofie Sigrinn, CC BY-SA 4.0, Wikimedia Commons",q03:"Nikkereres, CC BY-SA 4.0, Wikimedia Commons",q04:"European Union 2024 - EP, Wikimedia Commons",q05:"EPP Group in the CoR, CC BY 2.0, Wikimedia Commons",q06:"European Union 2024 - EP, Wikimedia Commons"};
+const COL=["#FFA028","#FF5A36","#FFD23F","#2EC4B6","#FF6FA5","#9BE15D","#4DA3FF"];
+const N=D.length;
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),hub=document.getElementById("hub"),msg=document.getElementById("msg"),card=document.getElementById("card"),cc=document.getElementById("cc"),ptr=document.getElementById("ptr"),sbtn=document.getElementById("sound");
+const SEG=2*Math.PI/N, O="#FFA028";
+let rot=0, spinning=false, snd=true, ac=null, S=0;
+function size(){const r=cv.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);S=Math.round(r.width*d);cv.width=S;cv.height=S;draw()}
+function draw(){
+ const c=S/2; ctx.clearRect(0,0,S,S); ctx.save(); ctx.translate(c,c); ctx.rotate(rot);
+ const R=c-S*.012;
+ for(let i=0;i<N;i++){
+  const a0=i*SEG-SEG/2-Math.PI/2, a1=a0+SEG;
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a0,a1);ctx.closePath();
+  ctx.fillStyle=D[i][6]?"#262626":COL[i%COL.length];ctx.fill();
+  ctx.strokeStyle="#000";ctx.lineWidth=S*.003;ctx.stroke();
+  ctx.save();ctx.rotate(i*SEG-Math.PI/2);
+  ctx.textAlign="right";ctx.textBaseline="middle";
+  ctx.font="700 "+Math.round(S*.0285)+"px BestSans,sans-serif";
+  ctx.fillStyle=D[i][6]?O:"#111";
+  ctx.fillText(D[i][0],R-S*.022,0);
+  ctx.restore();
+ }
+ ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.strokeStyle="#fff";ctx.lineWidth=S*.014;ctx.stroke();
+ ctx.restore();
+}
+function idxAt(r){ let x=(-r)/SEG; x=((x%N)+N)%N; return Math.round(x)%N; }
+function tick(){ if(!snd)return; try{
+ ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+ const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+ o.type="square";o.frequency.setValueAtTime(1500,t);o.frequency.exponentialRampToValueAtTime(500,t+.03);
+ g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.04);
+ o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.05);}catch(e){} }
+function chime(ok){ if(!snd)return; try{
+ ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+ const t=ac.currentTime;(ok?[523,659,784]:[330,262]).forEach((f,k)=>{const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t+k*.1);g.gain.exponentialRampToValueAtTime(.18,t+k*.1+.02);g.gain.exponentialRampToValueAtTime(.001,t+k*.1+.35);
+  o.connect(g).connect(ac.destination);o.start(t+k*.1);o.stop(t+k*.1+.4)});}catch(e){} }
+function bump(){try{ptr.animate([{transform:"rotate(0)"},{transform:"rotate(-22deg)"},{transform:"rotate(0)"}],{duration:90})}catch(e){}}
+function spin(){
+ if(spinning)return; spinning=true; hub.disabled=true; card.classList.remove("on");
+ msg.textContent="Γυρίζει...";
+ const total=(6+Math.random()*3)*2*Math.PI+Math.random()*2*Math.PI, dur=5200+Math.random()*1500, r0=rot, t0=performance.now();
+ let last=idxAt(rot);
+ (function f(now){
+  const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3.4);
+  rot=r0+total*e; draw();
+  const i=idxAt(rot); if(i!==last){last=i;tick();bump()}
+  if(p<1)requestAnimationFrame(f); else done(idxAt(rot));
+ })(t0);
+}
+function done(i){
+ spinning=false; const d=D[i];
+ if(d[6]){ chime(false); msg.textContent="Έχει επιστρέψει ήδη ("+d[1]+", "+d[6]+"). Δοκίμασε ξανά.";
+  hub.disabled=true; setTimeout(spin,2200); return; }
+ hub.disabled=false; hub.textContent="Ξανά"; chime(true); msg.textContent="";
+ const ph=d[7]?'<img class="ph" src="img/'+d[7]+'.jpg" alt="'+d[1]+'">':'<div class="ph ini">'+d[1].split(" ").map(function(s){return s[0]}).slice(0,2).join("")+'</div>';
+ const when=(d[3]?d[3]+" ":"")+d[4];
+ cc.innerHTML=ph+'<div class="t">Ο τροχός έδειξε</div><h2>'+d[1]+'</h2><div class="r">'+d[2]+'</div><div class="m">'+when+'</div>'+
+ '<p><b style="color:#FFA028">Λόγος αποχώρησης, κατά το Ποντίκι:</b> '+d[5]+'.</p>'+
+ '<small>Παιχνίδι τύχης, όχι πρόβλεψη. Η λίστα του Ποντικιού μετρά διαφορετικές «εξόδους» (παραίτηση, διαγραφή, αποπομπή, απόσυρση υποψηφιότητας).</small>'+
+ (CR[d[7]]?'<small>Φωτό: '+CR[d[7]]+'</small>':'')+'<button class="btn" id="again">Γύρνα ξανά</button>';
+ cc.style.borderColor=COL[i%COL.length];cc.querySelector('.btn').style.background=COL[i%COL.length];cc.querySelector('.ph').style.borderColor=COL[i%COL.length];card.classList.add("on"); document.getElementById("again").onclick=spin;
+}
+hub.onclick=spin; cv.onclick=spin;
+card.onclick=function(e){if(e.target===card)card.classList.remove("on")};
+sbtn.onclick=function(){snd=!snd;sbtn.textContent="ΗΧΟΣ: "+(snd?"ΝΑΙ":"ΟΧΙ")};
+addEventListener("resize",size);
+size();
+if(document.fonts&&document.fonts.load)document.fonts.load("700 20px BestSans").then(size);
+</script></body></html>
